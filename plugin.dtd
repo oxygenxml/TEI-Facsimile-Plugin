@@ -1,0 +1,56 @@
+<!--doc: A plugin extension.-->
+<!ELEMENT extension (#PCDATA)>
+<!ATTLIST extension type (selectionProcessor|documentProcessor|generalExtension|URLStreamHandler|URLHandler|TargetedURLHandler|URLChooser|URLChooserToolbar|componentsValidator|OpenRedirect|WorkspaceAccess|LockHandlerFactory|StylesFilter|OptionPage) #REQUIRED>
+<!ATTLIST extension class CDATA #IMPLIED>
+<!--doc: The keyboard shortcut and action name are available for the following extension types:
+    selectionProcessor
+    documentProcessor
+    generalExtension
+Example: ctrl shift E
+    -->
+<!ATTLIST extension keyboardShortcut CDATA #IMPLIED>
+<!ATTLIST extension actionName CDATA #IMPLIED>
+<!ELEMENT runtime (#PCDATA | library)*>
+<!ELEMENT library (#PCDATA)>
+<!ATTLIST library name CDATA #IMPLIED>
+<!-- doc: The default value is "local"
+When choosing "local" the library is loaded in the plugin's own class loader.
+When choosing "global" the library is loaded in the main Oxygen class loader (as if it would be present in the Oxygen "lib" directory).-->
+<!ATTLIST library scope (global|local) "local">
+<!ELEMENT plugin (#PCDATA | runtime | extension | view | toolbar | property)*>
+<!-- An ID to identify the plugin. -->
+<!ATTLIST plugin id CDATA #REQUIRED>
+<!ATTLIST plugin name CDATA #IMPLIED>
+<!ATTLIST plugin description CDATA #IMPLIED>
+<!ATTLIST plugin version CDATA #IMPLIED>
+<!ATTLIST plugin vendor CDATA #IMPLIED>
+<!ATTLIST plugin class CDATA #IMPLIED>
+<!-- doc: The default value is "preferOxygenResources"
+When choosing "preferReferencedResources" the libraries which are referenced in the "plugin.xml"
+will have precedence over the ones in the Oxygen "lib" directory if they have conflicting package names.
+When choosing "preferOxygenResources" the libraries which are referenced in the Oxygen "lib"
+directory will have precedence over the ones in the "plugin.xml" if they have conflicting package names.-->
+<!ATTLIST plugin classLoaderType (preferReferencedResources|preferOxygenResources) "preferOxygenResources">
+<!--doc: This element defines an unique ID for a view which will be customized in the WorkspaceAccess plugin extension-->
+<!ELEMENT view EMPTY>
+<!--doc:  The ID of the view-->
+<!ATTLIST view id ID #REQUIRED>
+<!--doc: The initial side on the Oxygen main frame where the view will be placed. -->
+<!ATTLIST view initialSide (NORTH|SOUTH|EAST|WEST) "WEST">
+<!--doc: The initial row on the specified side where the view will be placed. 
+For example the Oxygen "Project" view has an initial row of "0" and the Outline view has an initial row of "1". -->
+<!ATTLIST view initialRow CDATA #IMPLIED>
+
+<!--doc: This element defines an unique ID for a toolbar which will be customized in the WorkspaceAccess plugin extension-->
+<!ELEMENT toolbar EMPTY>
+<!--doc:  The ID of the toolbar-->
+<!ATTLIST toolbar id ID #REQUIRED>
+<!--doc: The initial side on the Oxygen main frame where the toolbar will be placed. -->
+<!ATTLIST toolbar initialSide (NORTH|SOUTH) "NORTH">
+<!--doc: The initial row on the specified side where the toolbar will be placed. 
+For example the Oxygen main menu has an initial row of "0" and the "Edit" toolbar has an initial row of "1". -->
+<!ATTLIST toolbar initialRow CDATA #IMPLIED>
+<!-- Property element -->
+<!ELEMENT property EMPTY>
+<!ATTLIST property name CDATA #REQUIRED>
+<!ATTLIST property value CDATA #REQUIRED>

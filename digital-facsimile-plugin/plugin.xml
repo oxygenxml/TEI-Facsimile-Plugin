@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The plugin.dtd file is located in the OXYGEN_INSATALL_DIR/plugins directory -->
+<!DOCTYPE plugin SYSTEM "../plugin.dtd">
+
+<plugin
+ id="com.oxygenxml.image.markup"
+ name="Image-Markup-Plugin"
+ description="Digital Facsimile Annotation plugin"
+ version="${project.version}"
+ vendor="SyncRO"
+ class="com.oxygenxml.image.markup.ImageCoordinatesPlugin"
+ classLoaderType="preferReferencedResources">
+  <runtime>
+         <library name="lib/${project.build.finalName}.jar"/>
+  </runtime>
+  
+  <extension type="WorkspaceAccess" 
+   class="com.oxygenxml.image.markup.ImageCoordinatesPluginExtension"/>
+  
+  <view id="Image-Markup" initialSide="WEST" initialRow="0"/>
+</plugin>
