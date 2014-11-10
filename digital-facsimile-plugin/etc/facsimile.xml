@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://www.tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng" type="application/xml"
+	schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<?xml-stylesheet type="text/css" href="facsimile.css"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>Digital Facsimile Sample</title>
+            </titleStmt>
+            <publicationStmt>
+                <p></p>
+            </publicationStmt>
+            <sourceDesc>
+                <p></p>
+            </sourceDesc>
+        </fileDesc>
+        <revisionDesc>
+            <change></change>
+        </revisionDesc>
+    </teiHeader>
+    <facsimile>
+        <surface
+            ulx="0"
+            uly="0"
+            lrx="566"
+            lry="800">
+            <graphic url="Bovelles-49r.png"/>
+            
+            <zone 
+                ulx="80" 
+                uly="63" 
+                lrx="499" 
+                lry="133">
+                <!-- contains the title -->
+            </zone>
+            
+            <zone 
+                ulx="85" 
+                uly="209" 
+                lrx="495" 
+                lry="497">
+            <!-- contains the paragraph in italics -->
+            </zone>
+            
+            <zone 
+                ulx="282" 
+                uly="218" 
+                lrx="488" 
+                lry="432">
+                <!-- contains the figure -->
+            </zone>
+            
+            <zone 
+                ulx="114" 
+                uly="343" 
+                lrx="166" 
+                lry="364">
+                <!-- contains the word "pendans" -->    
+            </zone>
+        </surface>
+    </facsimile>
+</TEI>

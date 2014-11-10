@@ -305,13 +305,54 @@ public class ImageController {
         String selectedText = ((WSTextEditorPage) currentPage).getSelectedText();
         try {
           URL toOpen = new URL(currentEditorAccess.getEditorLocation(), selectedText);
-          imageViewerPanel.showImage(toOpen);
+          openImage(currentPage, toOpen);
 
-          Object[] evaluateXPath = ((WSXMLTextEditorPage) currentPage).evaluateXPath("for $zone in //zone return string-join(($zone/@ulx, $zone/@uly, $zone/@lrx, $zone/@lry), ',')");
-          if (evaluateXPath != null && evaluateXPath.length > 0) {
-            init(evaluateXPath);
-          }
+        } catch (MalformedURLException e1) {
+          e1.printStackTrace();
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        } catch (XPathException e1) {
+          e1.printStackTrace();
+        }
+      }
+    }
+  }
 
+  /**
+   * Open the image with the given URL.
+   * 
+   * @param currentPage
+   * @param toOpen
+   * @throws IOException
+   * @throws XPathException
+   */
+  private void openImage(WSEditorPage currentPage, URL toOpen)
+      throws IOException, XPathException {
+    imageViewerPanel.showImage(toOpen);
+
+    Object[] evaluateXPath = ((WSXMLTextEditorPage) currentPage).evaluateXPath("for $zone in //zone return string-join(($zone/@ulx, $zone/@uly, $zone/@lrx, $zone/@lry), ',')");
+    if (evaluateXPath != null && evaluateXPath.length > 0) {
+      init(evaluateXPath);
+    }
+  }
+  
+  /**
+   * Open the image with the given URL.
+   * 
+   * @param currentPage
+   * @param toOpen
+   * @throws IOException
+   * @throws XPathException
+   */
+  public void openImage(URL toOpen)
+      throws IOException, XPathException {
+    WSEditor currentEditorAccess = pluginWorkspaceAccess.getCurrentEditorAccess(
+        PluginWorkspace.MAIN_EDITING_AREA);
+    if (currentEditorAccess != null) {
+      WSEditorPage currentPage = currentEditorAccess.getCurrentPage();
+      if (currentPage instanceof WSXMLTextEditorPage) {
+        try {
+          openImage(currentPage, toOpen);
         } catch (MalformedURLException e1) {
           e1.printStackTrace();
         } catch (IOException e1) {

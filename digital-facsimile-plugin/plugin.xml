@@ -8,14 +8,15 @@
  description="Digital Facsimile Annotation plugin"
  version="${project.version}"
  vendor="SyncRO"
- class="com.oxygenxml.image.markup.ImageCoordinatesPlugin"
+ class="com.oxygenxml.image.markup.ImageMarkupPlugin"
  classLoaderType="preferReferencedResources">
   <runtime>
          <library name="lib/${project.build.finalName}.jar"/>
   </runtime>
   
   <extension type="WorkspaceAccess" 
-   class="com.oxygenxml.image.markup.ImageCoordinatesPluginExtension"/>
+   class="com.oxygenxml.image.markup.ImageMarkupPluginExtension"/>
   
   <view id="Image-Markup" initialSide="WEST" initialRow="0"/>
+ <toolbar id="image.markup.sample" initialSide="NORTH" initialRow="1"/>
 </plugin>

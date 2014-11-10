@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xt:extensions xmlns:xt="http://www.oxygenxml.com/ns/extension"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.oxygenxml.com/ns/extension http://www.oxygenxml.com/ns/extension/extensions.xsd">
+    <xt:extension id="com.oxygenxml.image.markup">
+        <xt:location href="image-markup-plugin-1.0.0-SNAPSHOT-plugin.jar"/>
+        <xt:version>1.0.0</xt:version>
+        <xt:oxy_version>14.0+</xt:oxy_version>
+        <xt:type>plugin</xt:type>
+        <xt:author>"TEI Facsimile Plugin" Open Source Project</xt:author>
+        <xt:name>TEI Facsimile Plugin</xt:name>
+        <xt:description xmlns="http://www.w3.org/1999/xhtml">A plugin that helps marking zones for a digital facsimile. 
+            After installation, if you want to quickly test it, you can just click <b>Image Markup Sample</b> on the toolbar.
+            This will automatically perform the following steps on some sample files. If you want to use your own files, you must:
+            <ol>
+                <li>Go to <i>Window->Show View</i> and click on <b>Image-Markup</b></li>
+                <li>Open a TEI document that contains facsimile information.</li>
+                <li>In the newly open editor, select an image name (for example <i>Bovelles-49r.png</i>) and press <b>Open Selected</b> in the <b>Image-Markup</b> view.</li>
+            </ol>
+            
+            <p><b>Supported features:</b></p>
+            <ul>
+                <li>If you place yourself in a <i>zone</i> element inside the document, that element will be painted
+                    with a different color.</li>
+                <li>If you right click on a zone in image view, you can either delete it (and will
+                    reflect in the editor) or copy it and then paste it in the document.</li>
+                <li>You can use the mouse to draw a new rectangle over the image. Then right click
+                    and copy its coordinates to paste them in the editor.</li>
+                <li>You can resize an existing rectangle from one of its corners.</li>
+            </ul>
+            <p>Known limitations (which can be addressed with some Java skills and free time):</p>
+            <ul>
+                <li>All <i>zone</i> elements are being rendered. Ideally only the <i>zone</i>
+                    elements from the <i>surface</i> element with the loaded image should be
+                    rendered.</li>
+                <li>New zone elements that are manually inserted in the document will not be
+                    rendered automatically. You'll have to reload the image.</li>
+            </ul>
+            </xt:description>
+        <xt:license>
+<![CDATA[
+Copyright 2013 Syncro Soft SRL, Romania. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are
+permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of
+conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list
+of conditions and the following disclaimer in the documentation and/or other materials
+provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY Syncro Soft SRL ''AS IS'' AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Syncro Soft SRL OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+THIRD-PARTY LIBRARIES AND RESOURCES
+Third party libraries and resources redistributed in this package are subject to their 
+respective licenses.
+
+]]></xt:license>
+    </xt:extension>
+</xt:extensions>

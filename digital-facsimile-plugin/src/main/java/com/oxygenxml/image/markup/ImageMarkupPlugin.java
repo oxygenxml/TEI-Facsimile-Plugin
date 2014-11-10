@@ -3,18 +3,18 @@ package com.oxygenxml.image.markup;
 import ro.sync.exml.plugin.Plugin;
 import ro.sync.exml.plugin.PluginDescriptor;
 
-public class ImageCoordinatesPlugin extends Plugin {
+public class ImageMarkupPlugin extends Plugin {
   /**
    * The static plugin instance.
    */
-  private static ImageCoordinatesPlugin instance = null;
+  private static ImageMarkupPlugin instance = null;
 
   /**
    * Constructs the plugin.
    * 
    * @param descriptor The plugin descriptor
    */
-  public ImageCoordinatesPlugin(PluginDescriptor descriptor) {
+  public ImageMarkupPlugin(PluginDescriptor descriptor) {
     super(descriptor);
 
     if (instance != null) {
@@ -28,7 +28,7 @@ public class ImageCoordinatesPlugin extends Plugin {
    * 
    * @return the shared plugin instance.
    */
-  public static ImageCoordinatesPlugin getInstance() {
+  public static ImageMarkupPlugin getInstance() {
     return instance;
   }
 }
