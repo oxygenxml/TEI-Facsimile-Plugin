@@ -20,52 +20,52 @@ import ro.sync.exml.workspace.api.standalone.ViewInfo;
  * @author alex_jitianu
  */
 public class ImageCoordinatesPluginExtension implements WorkspaceAccessPluginExtension {
-	/**
-	 * The panel that paints the image.
-	 */
-	private ImageViewerPanel imageViewerPanel = new ImageViewerPanel();
-	/**
-	 * Controller for keeping the image in sync with the editor.
-	 */
-	private ImageController ctrl = new ImageController(imageViewerPanel);
+  /**
+   * The panel that paints the image.
+   */
+  private ImageViewerPanel imageViewerPanel = new ImageViewerPanel();
+  /**
+   * Controller for keeping the image in sync with the editor.
+   */
+  private ImageController ctrl = new ImageController(imageViewerPanel);
 
-	/**
-	 * @see ro.sync.exml.plugin.workspace.WorkspaceAccessPluginExtension#applicationStarted(ro.sync.exml.workspace.api.standalone.StandalonePluginWorkspace)
-	 */
-	@Override
-	public void applicationStarted(final StandalonePluginWorkspace pluginWorkspaceAccess) {
-		ctrl.init(pluginWorkspaceAccess);
-		pluginWorkspaceAccess.addViewComponentCustomizer(new ViewComponentCustomizer() {
-			/**
-			 * @see ro.sync.exml.workspace.api.standalone.ViewComponentCustomizer#customizeView(ro.sync.exml.workspace.api.standalone.ViewInfo)
-			 */
-			@Override
-			public void customizeView(ViewInfo viewInfo) {
-				if (ImageViewerPanel.IMAGE_VIEWER_ID.equals(viewInfo.getViewID())) {
-					JPanel jPanel = new JPanel(new BorderLayout());
+  /**
+   * @see ro.sync.exml.plugin.workspace.WorkspaceAccessPluginExtension#applicationStarted(ro.sync.exml.workspace.api.standalone.StandalonePluginWorkspace)
+   */
+  @Override
+  public void applicationStarted(final StandalonePluginWorkspace pluginWorkspaceAccess) {
+    ctrl.init(pluginWorkspaceAccess);
+    pluginWorkspaceAccess.addViewComponentCustomizer(new ViewComponentCustomizer() {
+      /**
+       * @see ro.sync.exml.workspace.api.standalone.ViewComponentCustomizer#customizeView(ro.sync.exml.workspace.api.standalone.ViewInfo)
+       */
+      @Override
+      public void customizeView(ViewInfo viewInfo) {
+        if (ImageViewerPanel.IMAGE_VIEWER_ID.equals(viewInfo.getViewID())) {
+          JPanel jPanel = new JPanel(new BorderLayout());
 
-					JPanel northPanel = new JPanel(new GridBagLayout());
+          JPanel northPanel = new JPanel(new GridBagLayout());
 
-					JButton jButton = new JButton("Open selected");
-					jButton.addActionListener(new ActionListener() {
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							ctrl.openSelected();
-						}
-					});
-					northPanel.add(jButton);
+          JButton jButton = new JButton("Open selected");
+          jButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              ctrl.openSelected();
+            }
+          });
+          northPanel.add(jButton);
 
-					jPanel.add(northPanel, BorderLayout.NORTH);
-					jPanel.add(imageViewerPanel.getPlaceholder(), BorderLayout.CENTER);
+          jPanel.add(northPanel, BorderLayout.NORTH);
+          jPanel.add(imageViewerPanel.getPlaceholder(), BorderLayout.CENTER);
 
-					viewInfo.setComponent(jPanel);
-				}
-			}
-		});
-	}
+          viewInfo.setComponent(jPanel);
+        }
+      }
+    });
+  }
 
-	@Override
-	public boolean applicationClosing() {
-		return true;
-	}
+  @Override
+  public boolean applicationClosing() {
+    return true;
+  }
 }

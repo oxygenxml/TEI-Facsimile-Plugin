@@ -84,6 +84,6 @@
 	</build>
 
   <modules>
-    <module>digital-facsimile-plugin</module>
+    <module>image-markup-plugin</module>
   </modules>
 </project>
