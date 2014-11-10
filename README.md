@@ -5,11 +5,11 @@ A plugin that provides support for working with  Digital Facsimiles in Text Enco
 
 The plugin is packed as an add-on so you can install it using the Oxygen add-ons support. Depending on the Oxygen version you are using, the procedure might differ but the update site where this add-on is published is this: 
 
-https://github.com/oxygenxml/TEI-Facsimile-Plugin/blob/master/addon/image-markup-plugin.xml
+addon/image-markup-plugin.xml
 
 Another possibility is to just unzip the following archive inside {OxygenInstallDir}/plugins/.
 
-https://github.com/oxygenxml/TEI-Facsimile-Plugin/blob/master/addon/image-markup-plugin-1.0.0-SNAPSHOT-plugin.jar
+addon/image-markup-plugin-1.0.0-SNAPSHOT-plugin.jar
 
 Please make sure you are not creating any additional directories. After unziping, the directory structure should look like this:
 
