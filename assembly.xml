@@ -8,6 +8,7 @@
 	<id>plugin</id>
 	<formats>
 		<format>jar</format>
+		<format>zip</format>
 	</formats>
 
 	<fileSets>
@@ -47,21 +48,4 @@
 			<filtered>true</filtered>
 		</file>
 	</files>
-	
-	
-	<!-- In case one of your plugins needs to package its dependencies, use a section like the one below. -->
-	<!-- 
-	<dependencySets>
-	    <dependencySet>
-	        <unpack>false</unpack>
-	        <scope>runtime</scope>
-	        <outputDirectory>/lib</outputDirectory>
-	        <includes>
-	            <include>com.comp:library-1</include>
-	            <include>com.comp:library-2</include>	            
-	        </includes>
-	    </dependencySet>
-	</dependencySets>	
-	 -->
-	 
 </assembly>

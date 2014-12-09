@@ -144,6 +144,15 @@
                       <overWrite>true</overWrite>
                       <outputDirectory>${build.dir}/../../addon</outputDirectory>
                     </artifactItem>
+                    <artifactItem>
+                      <groupId>${project.groupId}</groupId>
+                      <artifactId>${project.artifactId}</artifactId>
+                      <version>${project.version}</version>
+                      <classifier>plugin</classifier>
+                      <type>zip</type>
+                      <overWrite>true</overWrite>
+                      <outputDirectory>${build.dir}/../../builds</outputDirectory>
+                    </artifactItem>
                   </artifactItems>
                 </configuration>
               </execution>
