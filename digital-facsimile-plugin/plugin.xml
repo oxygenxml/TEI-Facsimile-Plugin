@@ -17,6 +17,6 @@
   <extension type="WorkspaceAccess" 
    class="com.oxygenxml.image.markup.ImageMarkupPluginExtension"/>
   
-  <view id="Image-Markup" initialSide="WEST" initialRow="0"/>
+  <view id="Image-Markup" initialSide="EAST" initialRow="0"/>
  <toolbar id="image.markup.sample" initialSide="NORTH" initialRow="1"/>
 </plugin>
