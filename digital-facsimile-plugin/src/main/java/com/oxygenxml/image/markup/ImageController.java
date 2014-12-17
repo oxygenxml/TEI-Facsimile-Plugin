@@ -130,6 +130,7 @@ public class ImageController {
     imageViewerPanel.addMouseListener(new MouseAdapter() {
       @Override
       public void mousePressed(MouseEvent e) {
+        showPopup(e);
       }
       @Override
       public void mouseReleased(MouseEvent e) {
