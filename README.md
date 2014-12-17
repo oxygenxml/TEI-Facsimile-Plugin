@@ -8,9 +8,9 @@ How to install it
 1. Unzip  *builds/addon/image-markup-plugin-1.0.0-SNAPSHOT-plugin.zip* inside *{OxygenInstallDir}/plugins/*. Please make sure you are not creating any additional directories. After unziping, the directory structure should look like this:
 
     plugins
-    --image-markup-plugin-1.0.0-SNAPSHOT-plugin
-    ---lib
-    ---plugin.xml 
+    \t\timage-markup-plugin-1.0.0-SNAPSHOT-plugin
+    \t\t\tlib
+    \t\t\tplugin.xml 
 
 
 2. The plugin is also packed as an add-on so you can install it using the Oxygen add-ons support. Depending on the Oxygen version you are using, the procedure might differ but the update site where this add-on is published is this: 
