@@ -40,6 +40,6 @@ How to use it
 2. Open a sample file
 3. Select an image location in the editor and press *Open Selected* in the view. For example if you have a 
 
-	<graphic url="Bovelles-49r.png"/>
+	&lt;graphic url="Bovelles-49r.png"/&gt;
 	
 you should select *Bovelles-49r.png* and press *Open Selected* in the view.
