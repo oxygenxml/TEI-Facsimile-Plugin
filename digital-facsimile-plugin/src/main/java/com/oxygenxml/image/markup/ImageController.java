@@ -39,6 +39,8 @@ import ro.sync.exml.workspace.api.listeners.WSEditorChangeListener;
 import ro.sync.exml.workspace.api.listeners.WSEditorListener;
 import ro.sync.exml.workspace.api.standalone.StandalonePluginWorkspace;
 
+import com.oxygenxml.image.markup.controller.ImageScaleSupport;
+import com.oxygenxml.image.markup.controller.ScaleListener;
 import com.oxygenxml.image.markup.decorator.RectangleImageDecorator;
 
 /**
@@ -83,6 +85,8 @@ public class ImageController {
       }
     }
   };
+  
+  private ImageScaleSupport imageScaleSupport;
 
   /**
    * Constructor.
@@ -92,6 +96,21 @@ public class ImageController {
   public ImageController(ImageViewerPanel viewerPanel) {
     timer.setRepeats(false);
     this.imageViewerPanel = viewerPanel;
+    
+    imageScaleSupport = new ImageScaleSupport(viewerPanel.getPlaceholder());
+    imageScaleSupport.addScaleListener(new ScaleListener() {
+      @Override
+      public void scaleEvent(double oldScale, double newScale) {
+        // The scale has changed. Reload the areas.
+        try {
+          reloadAreas(null);
+          syncZone();
+        } catch (XPathException e) {
+          e.printStackTrace();
+        }
+      }
+    });
+    viewerPanel.setImageScaleSupport(imageScaleSupport);
 
     decorator = RectangleImageDecorator.install(imageViewerPanel);
     decorator.addAreaUpdateListener(new AreaUpdatedListener() {
@@ -267,10 +286,10 @@ public class ImageController {
   private Rectangle buildRectangle(String zone) {
     String[] splits = zone.split(",");
 
-    int x = Integer.parseInt(splits[0]);
-    int y = Integer.parseInt(splits[1]);
-    int lx = Integer.parseInt(splits[2]);
-    int ly = Integer.parseInt(splits[3]);
+    int x = imageScaleSupport.applyScale(Integer.parseInt(splits[0]));
+    int y = imageScaleSupport.applyScale(Integer.parseInt(splits[1]));
+    int lx = imageScaleSupport.applyScale(Integer.parseInt(splits[2]));
+    int ly = imageScaleSupport.applyScale(Integer.parseInt(splits[3]));
     Rectangle rectangle = new Rectangle(
         x,
         y,
@@ -300,21 +319,31 @@ public class ImageController {
   void openSelected() {
     WSEditor currentEditorAccess = pluginWorkspaceAccess.getCurrentEditorAccess(
         PluginWorkspace.MAIN_EDITING_AREA);
+    URL toOpen = null;
+    WSEditorPage currentPage = null;
     if (currentEditorAccess != null) {
-      WSEditorPage currentPage = currentEditorAccess.getCurrentPage();
+      currentPage = currentEditorAccess.getCurrentPage();
       if (currentPage instanceof WSXMLTextEditorPage) {
         String selectedText = ((WSTextEditorPage) currentPage).getSelectedText();
         try {
-          URL toOpen = new URL(currentEditorAccess.getEditorLocation(), selectedText);
-          openImage(currentPage, toOpen);
-
+          toOpen = new URL(currentEditorAccess.getEditorLocation(), selectedText);
         } catch (MalformedURLException e1) {
           e1.printStackTrace();
-        } catch (IOException e1) {
-          e1.printStackTrace();
-        } catch (XPathException e1) {
-          e1.printStackTrace();
         }
+      }
+    }
+    
+    if (toOpen == null) {
+      toOpen = pluginWorkspaceAccess.chooseURL("Image Chooser", new String[] {"jpeg", "jpg", "png"}, "Image files");
+    }
+    
+    if (toOpen != null) {
+      try {
+        openImage(currentPage, toOpen);
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (XPathException e) {
+        e.printStackTrace();
       }
     }
   }
@@ -331,9 +360,30 @@ public class ImageController {
       throws IOException, XPathException {
     imageViewerPanel.showImage(toOpen);
 
-    Object[] evaluateXPath = ((WSXMLTextEditorPage) currentPage).evaluateXPath("for $zone in //zone return string-join(($zone/@ulx, $zone/@uly, $zone/@lrx, $zone/@lry), ',')");
-    if (evaluateXPath != null && evaluateXPath.length > 0) {
-      init(evaluateXPath);
+    reloadAreas(currentPage);
+  }
+
+  /**
+   * Reload the areas from the current page.
+   * 
+   * @param currentPage Current page.
+   * 
+   * @throws XPathException Unable to identify the areas.
+   */
+  private void reloadAreas(WSEditorPage currentPage) throws XPathException {
+    if (currentPage == null) {
+      WSEditor currentEditorAccess = pluginWorkspaceAccess.getCurrentEditorAccess(
+          PluginWorkspace.MAIN_EDITING_AREA);
+      if (currentEditorAccess != null) {
+        currentPage = currentEditorAccess.getCurrentPage();
+      }
+    }
+    
+    if (currentPage instanceof WSXMLTextEditorPage) {
+      Object[] evaluateXPath = ((WSXMLTextEditorPage) currentPage).evaluateXPath("for $zone in //zone return string-join(($zone/@ulx, $zone/@uly, $zone/@lrx, $zone/@lry), ',')");
+      if (evaluateXPath != null && evaluateXPath.length > 0) {
+        init(evaluateXPath);
+      }
     }
   }
   
@@ -486,10 +536,14 @@ public class ImageController {
    */
   private String buildZoneElement(final Rectangle toProcess) {
     StringBuilder b = new StringBuilder("<zone ulx=\"");
-    b.append(toProcess.x).append("\"");
-    b.append(" uly=\"").append(toProcess.y).append("\"");
-    b.append(" lrx=\"").append(toProcess.x + toProcess.width).append("\"");
-    b.append(" lry=\"").append(toProcess.y + toProcess.height).append("\"/>");
+    int x = imageScaleSupport.getOriginal(toProcess.x);
+    int y = imageScaleSupport.getOriginal(toProcess.y);
+    int lrx = imageScaleSupport.getOriginal(toProcess.x + toProcess.width);
+    int lry = imageScaleSupport.getOriginal(toProcess.y + toProcess.height);
+    b.append(x).append("\"");
+    b.append(" uly=\"").append(y).append("\"");
+    b.append(" lrx=\"").append(lrx).append("\"");
+    b.append(" lry=\"").append(lry).append("\"/>");
 
     return b.toString();
   }

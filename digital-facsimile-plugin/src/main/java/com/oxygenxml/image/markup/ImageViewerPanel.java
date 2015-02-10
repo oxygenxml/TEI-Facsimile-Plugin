@@ -16,6 +16,7 @@ import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
 
+import com.oxygenxml.image.markup.controller.ImageScaleSupport;
 import com.oxygenxml.image.markup.decorator.ImageDecorator;
 
 /**
@@ -41,6 +42,10 @@ public class ImageViewerPanel extends JPanel implements Scrollable {
    * Decorator used to draw over the image.
    */
   private ImageDecorator decorator;
+  /**
+   * Scale support.
+   */
+  private ImageScaleSupport imageScaleSupport;
 
   /**
    * Constructor.
@@ -48,7 +53,7 @@ public class ImageViewerPanel extends JPanel implements Scrollable {
   public ImageViewerPanel() {
     imageScroll = new JScrollPane(this);
   }
-
+  
   /**
    * Show the given image.
    * 
@@ -76,6 +81,8 @@ public class ImageViewerPanel extends JPanel implements Scrollable {
       Graphics2D g2d = (Graphics2D) g;
 
       AffineTransform tx = new AffineTransform();
+      double scale = imageScaleSupport.getScale();
+      tx.scale(scale, scale);
       g2d.drawImage(image, tx, this);
 
       decorator.paint(g);
@@ -144,10 +151,13 @@ public class ImageViewerPanel extends JPanel implements Scrollable {
       toRet = new Dimension(scrollWidth, scrollHeight);
     } else {
       // One to one
+      double scale = imageScaleSupport.getScale();
+      int width2 = (int) (image.getWidth() * scale);
+      int height2 = (int) (image.getHeight() * scale);
       toRet = 
           new Dimension(
-              image.getWidth() < scrollWidth ? scrollWidth : image.getWidth(), 
-                  image.getHeight() < scrollHeight ? scrollHeight : image.getHeight());
+              width2 < scrollWidth ? scrollWidth : width2, 
+                  height2 < scrollHeight ? scrollHeight : height2);
     }
     return toRet;
   }
@@ -158,5 +168,9 @@ public class ImageViewerPanel extends JPanel implements Scrollable {
    */
   public void setDecorator(ImageDecorator dec) {
     decorator = dec;
+  }
+  
+  public void setImageScaleSupport(ImageScaleSupport imageScaleSupport) {
+    this.imageScaleSupport = imageScaleSupport;
   }
 }
