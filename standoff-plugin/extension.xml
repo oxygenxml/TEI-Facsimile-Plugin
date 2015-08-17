@@ -1,0 +1,22 @@
+<xt:extension 
+    xmlns:xt="http://www.oxygenxml.com/ns/extension" 
+    id="com.oxygexml.samples.image.decorator">
+    <xt:location href="${project.build.finalName}-plugin.jar"/>
+    <xt:version>${project.parent.version}.0</xt:version>
+    <xt:oxy_version>${project.parent.version}</xt:oxy_version>
+    <xt:type>plugin</xt:type>
+    <xt:author>Oxygen XML Editor</xt:author>
+    <xt:name>Standoff plugin</xt:name>
+    <xt:description><html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Standoff plugin</title>
+    </head>
+    <body>
+        <div>
+            <p></p>
+        </div>
+    </body>
+</html>
+</xt:description>
+    <xt:license><![CDATA[pending]]></xt:license>
+</xt:extension>

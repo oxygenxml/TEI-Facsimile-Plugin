@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The plugin.dtd file is located in the OXYGEN_INSATALL_DIR/plugins directory -->
+<!DOCTYPE plugin SYSTEM "../plugin.dtd">
+
+<plugin
+ id="com.oxygenxml.tei.standoff"
+ name="StandoffPlugin"
+ description="Standoff annotation"
+ version="${project.version}"
+ vendor="SyncRO"
+ class="com.oxygenxml.tei.standoff.StandoffPlugin"
+ classLoaderType="preferReferencedResources">
+  <runtime>
+         <library name="lib/${project.build.finalName}.jar"/>
+  </runtime>
+  
+  <extension type="WorkspaceAccess" 
+   class="com.oxygenxml.tei.standoff.StandoffPluginExtension"/>
+  
+ <toolbar id="standoff.tei.plugin" initialSide="NORTH" initialRow="1"/>
+</plugin>
