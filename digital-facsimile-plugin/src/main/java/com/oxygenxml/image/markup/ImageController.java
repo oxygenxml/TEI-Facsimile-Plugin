@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -87,7 +90,7 @@ public class ImageController {
   };
   
   private ImageScaleSupport imageScaleSupport;
-
+  
   /**
    * Constructor.
    * 
@@ -122,19 +125,60 @@ public class ImageController {
           WSEditorPage currentPage = editorAccess.getCurrentPage();
           if (currentPage instanceof WSXMLTextEditorPage) {
             WSXMLTextEditorPage textEditorPage = (WSXMLTextEditorPage) currentPage;
-            String xpath = createXPath(originalArea);
+            // Get the coordinatyes attributes individually.
+            String xpath = createXPath(originalArea) + "/@*[local-name() = 'ulx' or local-name() = 'uly' or local-name() = 'lrx' or local-name() = 'lry']";
             try {
               WSXMLTextNodeRange[] ranges = textEditorPage.findElementsByXPath(xpath);
               if (ranges != null && ranges.length > 0) {
-                WSXMLTextNodeRange range = ranges[0];
-                Document document = textEditorPage.getDocument();
-                int startOffset = textEditorPage.getOffsetOfLineStart(range.getStartLine()) + range.getStartColumn() - 1;
-                int endOffset = textEditorPage.getOffsetOfLineStart(range.getEndLine()) + range.getEndColumn();
-
-                document.remove(startOffset, endOffset - startOffset);
-                
-                // Insert the new content.
-                document.insertString(startOffset, buildZoneElement(newArea), null);
+                List<WSXMLTextNodeRange> toSort = new ArrayList<WSXMLTextNodeRange>(Arrays.asList(ranges));
+                // We need to sort them descending to make sure we are using the correct offsets.
+                Collections.sort(toSort, new Comparator<WSXMLTextNodeRange>() {
+                  @Override
+                  public int compare(WSXMLTextNodeRange o1,
+                      WSXMLTextNodeRange o2) {
+                    int result = 0;
+                    if (o1.getStartLine() < o2.getStartLine()) {
+                      result = -1;
+                    } else if (o1.getStartLine() == o2.getStartLine()) {
+                      result = o1.getStartColumn() - o2.getStartColumn();
+                    } else {
+                      result = 1;
+                    }
+                    
+                    return result;
+                  }
+                  
+                });
+                // Replace each attribute with it's corresponding one instead of replacing them all at once.
+                textEditorPage.beginCompoundUndoableEdit();
+                int selectStart = -1;
+                int selectEnd = -1;
+                try {
+                  Document document = textEditorPage.getDocument();
+                  for (int i = toSort.size() - 1; i >= 0; i--) {
+                    WSXMLTextNodeRange range  = toSort.get(i);
+                    
+                    int startOffset = textEditorPage.getOffsetOfLineStart(range.getStartLine()) + range.getStartColumn() - 1;
+                    int endOffset = textEditorPage.getOffsetOfLineStart(range.getEndLine()) + range.getEndColumn() - 1;
+                    
+                    if (selectEnd == -1) {
+                      selectEnd = endOffset;
+                    }
+                    selectStart = startOffset;
+                    
+                    String text = document.getText(startOffset, endOffset - startOffset);
+                    String str = getReplacement(newArea, text);
+                    
+                    if (!str.equals(text.replace('\'', '"'))) {
+                      document.remove(startOffset, endOffset - startOffset);
+                      document.insertString(startOffset, str, null);
+                    }
+                  }
+                  
+                  textEditorPage.select(selectStart, selectEnd);
+                } finally {
+                  textEditorPage.endCompoundUndoableEdit();
+                }
               }
             } catch (XPathException e) {
               e.printStackTrace();
@@ -519,7 +563,8 @@ public class ImageController {
    * @return An XPath expression that when executed will identify the area in the document.
    */
   private String createXPath(final Rectangle toProcess) {
-    String xpath = "//zone[@ulx='" + toProcess.x
+    String xpath = 
+        "//zone[@ulx='" + toProcess.x
         + "'][@uly='" + toProcess.y
         + "'][@lrx='" + (toProcess.width + toProcess.x)
         + "'][@lry='" + (toProcess.height + toProcess.y)
@@ -535,16 +580,58 @@ public class ImageController {
    * @return A serialization of the rectangle, that can be inserted in the document.
    */
   private String buildZoneElement(final Rectangle toProcess) {
-    StringBuilder b = new StringBuilder("<zone ulx=\"");
+    StringBuilder b = new StringBuilder("<zone");
+    
+    buildZoneAttrs(toProcess, b);
+    
+    b.append("/>");
+
+    return b.toString();
+  }
+
+  /**
+   * Builds the coordinates.
+   * 
+   * @param toProcess Rectangle to write the coordinates for.
+   * @param b Builder to write them into.
+   */
+  private void buildZoneAttrs(final Rectangle toProcess, StringBuilder b) {
     int x = imageScaleSupport.getOriginal(toProcess.x);
     int y = imageScaleSupport.getOriginal(toProcess.y);
     int lrx = imageScaleSupport.getOriginal(toProcess.x + toProcess.width);
     int lry = imageScaleSupport.getOriginal(toProcess.y + toProcess.height);
-    b.append(x).append("\"");
+    
+    b.append(" ulx=\"").append(x).append("\"");
     b.append(" uly=\"").append(y).append("\"");
     b.append(" lrx=\"").append(lrx).append("\"");
-    b.append(" lry=\"").append(lry).append("\"/>");
-
+    b.append(" lry=\"").append(lry).append("\"");
+  }
+  
+  /**
+   * Gets the replacement for a coordinates text.
+   * 
+   * @param newArea New coordinates.
+   * @param text A coordinates text.
+   * 
+   * @return Replacement with the new value.
+   */
+  private String getReplacement(final Rectangle newArea, String text) {
+    StringBuilder b = new StringBuilder();
+    int x = imageScaleSupport.getOriginal(newArea.x);
+    int y = imageScaleSupport.getOriginal(newArea.y);
+    int lrx = imageScaleSupport.getOriginal(newArea.x + newArea.width);
+    int lry = imageScaleSupport.getOriginal(newArea.y + newArea.height);
+    
+    if (text.startsWith("ulx")) {
+      b.append("ulx=\"").append(x).append("\"");
+    } else if (text.startsWith("uly")) {
+      b.append("uly=\"").append(y).append("\"");
+    } else if (text.startsWith("lrx")) {
+      b.append("lrx=\"").append(lrx).append("\"");
+    } else if (text.startsWith("lry")) {
+      b.append("lry=\"").append(lry).append("\"");
+    }
+    
     return b.toString();
   }
 }
