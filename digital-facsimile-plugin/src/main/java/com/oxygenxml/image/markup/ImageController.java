@@ -23,6 +23,7 @@ import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.PopupMenuEvent;
@@ -187,6 +188,11 @@ public class ImageController {
             }
           }
         }
+      }
+
+      @Override
+      public void rectangleAdded(Rectangle newArea, Rectangle closestArea) {
+        insertNewArea(newArea, closestArea);
       }
     });
 
@@ -477,6 +483,32 @@ public class ImageController {
         decorator.setActive(candidate);
         JPopupMenu popup = new JPopupMenu();
         final Rectangle toProcess = candidate;
+
+        // An action that duplicates the current area.
+        AbstractAction duplicateAction = new AbstractAction() {
+          @Override
+          public void actionPerformed(ActionEvent arg0) {
+            Rectangle closest = toProcess;
+            Rectangle clone = (Rectangle) toProcess.clone();
+            clone.translate(0, toProcess.height + 2);
+            
+            List<Rectangle> areas = new ArrayList<Rectangle>(decorator.getAreas());
+            while (areas.contains(clone)) {
+              closest = (Rectangle) clone.clone();
+              clone.translate(0, toProcess.height + 2);
+            }
+            
+            if (imageViewerPanel.getHeight() < clone.y + clone.height) {
+              areas.add(clone);
+              decorator.setAreas(areas);
+
+              insertNewArea(clone, closest);
+            }
+          }
+        };
+        duplicateAction.putValue(Action.NAME, "Duplicate");
+        popup.add(duplicateAction);
+        
         AbstractAction copyAction = new AbstractAction() {
           @Override
           public void actionPerformed(ActionEvent arg0) {
@@ -633,5 +665,51 @@ public class ImageController {
     }
     
     return b.toString();
+  }
+  
+  /**
+   * Inserts a new area into the document.
+   * 
+   * @param newArea The new area.
+   * @param closestArea The reference area. The new area will be inserted after this existing area.
+   */
+  private void insertNewArea(Rectangle newArea, Rectangle closestArea) {
+    WSEditor editorAccess = pluginWorkspaceAccess.getCurrentEditorAccess(PluginWorkspace.MAIN_EDITING_AREA);
+    if (editorAccess != null) {
+      WSEditorPage currentPage = editorAccess.getCurrentPage();
+      if (currentPage instanceof WSXMLTextEditorPage) {
+        final WSXMLTextEditorPage textEditorPage = (WSXMLTextEditorPage) currentPage;
+        textEditorPage.beginCompoundUndoableEdit();
+        try {
+          // Search for the reference area.
+          WSXMLTextNodeRange[] ranges = textEditorPage.findElementsByXPath(createXPath(closestArea));
+          WSXMLTextNodeRange range = ranges[0];
+          
+          int endOffset = textEditorPage.getOffsetOfLineStart(range.getEndLine()) + range.getEndColumn() - 1;
+          
+          Document document = textEditorPage.getDocument();
+          // Inserts the new area.
+          document.insertString(endOffset, buildZoneElement(newArea), null);
+          document.insertString(endOffset, "\n", null);
+          // The previous new line has indented the zone element. We should look for it again.
+          WSXMLTextNodeRange[] newRanges = textEditorPage.findElementsByXPath(createXPath(newArea));
+          final int startSelect = textEditorPage.getOffsetOfLineStart(newRanges[0].getStartLine()) + newRanges[0].getStartColumn() - 1;
+          final int endSelect = textEditorPage.getOffsetOfLineStart(newRanges[0].getEndLine()) + newRanges[0].getEndColumn() - 1;
+          // Select the newly inserted area.
+          SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+              textEditorPage.select(startSelect, endSelect);
+            }
+          });
+        } catch (XPathException e) {
+          e.printStackTrace();
+        } catch (BadLocationException e) {
+          e.printStackTrace();
+        } finally {
+          textEditorPage.endCompoundUndoableEdit();
+        }
+      }
+    }
   }
 }

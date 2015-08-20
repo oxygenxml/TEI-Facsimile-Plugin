@@ -117,7 +117,7 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
       component.repaint(hintArea.x, hintArea.y, hintArea.width + 1, hintArea.height + 1);
     }
   }
-
+  
   @Override
   public void mouseClicked(MouseEvent ev) {}
 
@@ -151,16 +151,21 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
   public void mouseReleased(MouseEvent ev) {
     ResizeContext oldContext = resizeContext;
     resizeContext = null;
-    
-    if (oldContext != null && oldContext.getOriginalRectangle().width > 0) {
-      // An actual rectangle was being resized. Not a new one.
-      fireAreaUpdated(oldContext.getOriginalRectangle(), oldContext.getRectangle());
+    if (oldContext != null) {
+      if (oldContext.getOriginalRectangle().width > 0) {
+        // An actual rectangle was being resized. Not a new one.
+        fireAreaUpdated(oldContext.getOriginalRectangle(), oldContext.getRectangle());
+      } else if (oldContext.getRectangle().width > 1) {
+        fireRectangleAdded(oldContext.getRectangle());
+      }
     }
     
-    if (oldContext != null && oldContext.getRectangle().width <= 1) {
-      Rectangle toClear = oldContext.getRectangle();
-      areas.remove(toClear);
-      component.repaint(toClear.x, toClear.y, toClear.width + 1, toClear.height + 1);
+    if (oldContext != null) {
+      if (oldContext.getRectangle().width <= 1) {
+        Rectangle toClear = oldContext.getRectangle();
+        areas.remove(toClear);
+        component.repaint(toClear.x, toClear.y, toClear.width + 1, toClear.height + 1);
+      }
       Rectangle hintArea = getHintArea(oldContext.getResizePoint());
       component.repaint(hintArea.x, hintArea.y, hintArea.width + 1, hintArea.height + 1);
     }
@@ -301,6 +306,31 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
     for (Iterator<AreaUpdatedListener> iterator = listeners.iterator(); iterator.hasNext();) {
       AreaUpdatedListener listener = iterator.next();
       listener.rectangleUpdated(original, updated);
+    }
+  }
+  
+  /**
+   * A new rectangle was added.
+   * 
+   * @param newArea The newly added rectangle.
+   */
+  void fireRectangleAdded(Rectangle newArea) {
+    Rectangle candidate = null;
+    int delta = Integer.MAX_VALUE;
+    // Search for an already existing rectangle, closest to the new one.
+    for (Rectangle rectangle : areas) {
+      if (!rectangle.contains(newArea)) {
+        int cDelta = newArea.y - rectangle.y;
+        if (candidate == null || cDelta > 0 && cDelta < delta) {
+          candidate = rectangle;
+          delta = cDelta;
+        }
+      }
+    }
+    
+    for (Iterator<AreaUpdatedListener> iterator = listeners.iterator(); iterator.hasNext();) {
+      AreaUpdatedListener listener = iterator.next();
+      listener.rectangleAdded(newArea, candidate);
     }
   }
 }

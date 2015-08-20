@@ -15,4 +15,13 @@ public interface AreaUpdatedListener {
    * @param newArea New area.
    */
   void rectangleUpdated(Rectangle originalArea, Rectangle newArea);
+  
+  /**
+   * A new rectangle was added.
+   * 
+   * @param newArea The new added rectangle.
+   * @param closestArea An already existing rectangle that is closest to the new one.
+   * It can be used as a reference for inserting the new one.
+   */
+  void rectangleAdded(Rectangle newArea, Rectangle closestArea);
 }
