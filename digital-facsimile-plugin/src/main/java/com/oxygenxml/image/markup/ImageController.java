@@ -498,7 +498,9 @@ public class ImageController {
               clone.translate(0, toProcess.height + 2);
             }
             
-            if (imageViewerPanel.getHeight() < clone.y + clone.height) {
+            int panelHeight = imageViewerPanel.getHeight();
+            // Make sure the area is inside the panel area.
+            if (clone.y < panelHeight && (clone.y + clone.height) < panelHeight) {
               areas.add(clone);
               decorator.setAreas(areas);
 
@@ -550,7 +552,7 @@ public class ImageController {
                       WSXMLTextNodeRange range = ranges[0];
                       Document document = textEditorPage.getDocument();
                       int startOffset = textEditorPage.getOffsetOfLineStart(range.getStartLine()) + range.getStartColumn() - 1;
-                      int endOffset = textEditorPage.getOffsetOfLineStart(range.getEndLine()) + range.getEndColumn();
+                      int endOffset = textEditorPage.getOffsetOfLineStart(range.getEndLine()) + range.getEndColumn() - 1;
 
                       document.remove(startOffset, endOffset - startOffset);
                     }
