@@ -26,6 +26,8 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.text.BadLocationException;
@@ -74,6 +76,22 @@ public class ImageController {
       }
     }
   });
+  
+  /**
+   * A timer user to coalesce the document changes.
+   */
+  private javax.swing.Timer reloadAreasTimer = new javax.swing.Timer(800, new ActionListener() {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+      if (pluginWorkspaceAccess.isViewShowing(ImageViewerPanel.IMAGE_VIEWER_ID)) {
+        try {
+          reloadAreas(pluginWorkspaceAccess.getCurrentEditorAccess(PluginWorkspace.MAIN_EDITING_AREA).getCurrentPage());
+        } catch (XPathException e1) {
+          e1.printStackTrace();
+        }
+    }
+    }
+  });
 
   /**
    * Caret listener added on the text page to keep in sync.
@@ -87,6 +105,25 @@ public class ImageController {
         timer.stop();
         timer.start();
       }
+    }
+  };
+  
+  private boolean inhibit = false; 
+  private DocumentListener documentListener = new DocumentListener() {
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+      if (!inhibit) {
+        reloadAreasTimer.stop();
+        reloadAreasTimer.start();
+      }
+    }
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+      removeUpdate(e);
+    }
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+      removeUpdate(e);
     }
   };
   
@@ -152,6 +189,7 @@ public class ImageController {
                 });
                 // Replace each attribute with it's corresponding one instead of replacing them all at once.
                 textEditorPage.beginCompoundUndoableEdit();
+                disableSync(textEditorPage);
                 int selectStart = -1;
                 int selectEnd = -1;
                 try {
@@ -179,6 +217,7 @@ public class ImageController {
                   textEditorPage.select(selectStart, selectEnd);
                 } finally {
                   textEditorPage.endCompoundUndoableEdit();
+                  enableSync(textEditorPage);
                 }
               }
             } catch (XPathException e) {
@@ -264,6 +303,8 @@ public class ImageController {
 
       textComponent.removeCaretListener(caretListener);
       textComponent.addCaretListener(caretListener);
+      textComponent.getDocument().removeDocumentListener(documentListener);
+      textComponent.getDocument().addDocumentListener(documentListener);
     }
   }
 
@@ -278,6 +319,7 @@ public class ImageController {
       JTextArea textComponent = (JTextArea) ((WSXMLTextEditorPage) currentPage).getTextComponent();
 
       textComponent.removeCaretListener(caretListener);
+      textComponent.getDocument().removeDocumentListener(documentListener);
     }
   }
 
@@ -542,8 +584,8 @@ public class ImageController {
               WSEditorPage currentPage = editorAccess.getCurrentPage();
               if (currentPage instanceof WSXMLTextEditorPage) {
                 WSXMLTextEditorPage textEditorPage = (WSXMLTextEditorPage) currentPage;
+                disableSync(textEditorPage);
                 try {
-                  ((JTextComponent) textEditorPage.getTextComponent()).removeCaretListener(caretListener);
                   try {
                     String xpath = createXPath(toProcess);
                     WSXMLTextNodeRange[] ranges = textEditorPage.findElementsByXPath(xpath);
@@ -562,7 +604,7 @@ public class ImageController {
                     e.printStackTrace();
                   }
                 } finally {
-                  ((JTextComponent) textEditorPage.getTextComponent()).addCaretListener(caretListener);
+                  enableSync(textEditorPage);
                 }
               }
             }
@@ -682,6 +724,8 @@ public class ImageController {
       if (currentPage instanceof WSXMLTextEditorPage) {
         final WSXMLTextEditorPage textEditorPage = (WSXMLTextEditorPage) currentPage;
         textEditorPage.beginCompoundUndoableEdit();
+        
+        disableSync(textEditorPage);
         try {
           // Search for the reference area.
           WSXMLTextNodeRange[] ranges = textEditorPage.findElementsByXPath(createXPath(closestArea));
@@ -710,8 +754,29 @@ public class ImageController {
           e.printStackTrace();
         } finally {
           textEditorPage.endCompoundUndoableEdit();
+          enableSync(textEditorPage);
         }
       }
     }
+  }
+  
+  /**
+   * Changes in the text page will be reflected in the image.
+   * 
+   * @param textEditorPage The text page to sync with.
+   */
+  private void enableSync(WSXMLTextEditorPage textEditorPage) {
+    ((JTextComponent) textEditorPage.getTextComponent()).addCaretListener(caretListener);
+    inhibit = false;
+  }
+
+  /**
+   * No longer listens for changes in the text page.
+   * 
+   * @param textEditorPage The text page to inhibit notifications from.
+   */
+  private void disableSync(WSXMLTextEditorPage textEditorPage) {
+    inhibit = true;
+    ((JTextComponent) textEditorPage.getTextComponent()).removeCaretListener(caretListener);
   }
 }
