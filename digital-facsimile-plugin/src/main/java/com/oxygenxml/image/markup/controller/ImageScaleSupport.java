@@ -1,6 +1,12 @@
 package com.oxygenxml.image.markup.controller;
 
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -8,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JComponent;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 /**
  * Scaling support for the panel that presents the image. 
@@ -27,6 +35,20 @@ public class ImageScaleSupport {
       @Override
       public void mouseWheelMoved(MouseWheelEvent e) {
         if ((e.getModifiers() & InputEvent.CTRL_MASK) != 0) {
+          
+          JScrollPane jScrollPane = (JScrollPane) panel;
+          final Rectangle viewRect = jScrollPane.getViewport().getViewRect();
+          
+          Point mousePoint = e.getPoint();
+          Point compPoint = new Point(mousePoint.x + viewRect.x, mousePoint.y + viewRect.y);
+          Point original = getOriginal(compPoint);
+          final Component view = jScrollPane.getViewport().getView();
+//          System.out.println();
+//          System.out.println("Visible " + viewRect);
+//          System.out.println("mouse " + mousePoint);
+//          System.out.println("comp " + compPoint);
+//          System.out.println("original " + original + " scale " + scale);
+          
           double oldScale = scale;
           if (e.getWheelRotation() > 0) {
             scale = scale / 2;
@@ -36,6 +58,31 @@ public class ImageScaleSupport {
           
           fireScaleListener(oldScale, scale);
           
+          
+          Point applyScale = applyScale(original);
+          Dimension visibleRect = jScrollPane.getViewport().getSize();
+          int sX = applyScale.x - mousePoint.x;
+          int sY = applyScale.y - mousePoint.y;
+          
+          final Rectangle rectangle = new Rectangle(sX, sY, visibleRect.width, visibleRect.height);
+          
+          view.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+              SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+//                  System.out.println();
+//                  System.out.println("view " + view.getSize());
+//                  System.out.println("view " + view.getPreferredSize());
+//                  System.out.println("scroll " + rectangle);
+                  ((JComponent) view).scrollRectToVisible(rectangle);
+                }
+              });
+              view.removeComponentListener(this);
+            }
+          });
+
           panel.invalidate();
           panel.doLayout();
           panel.doLayout();

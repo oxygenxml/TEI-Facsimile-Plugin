@@ -44,6 +44,7 @@ import ro.sync.exml.workspace.api.editor.page.text.xml.XPathException;
 import ro.sync.exml.workspace.api.listeners.WSEditorChangeListener;
 import ro.sync.exml.workspace.api.listeners.WSEditorListener;
 import ro.sync.exml.workspace.api.standalone.StandalonePluginWorkspace;
+import ro.sync.util.URLUtil;
 
 import com.oxygenxml.image.markup.controller.ImageScaleSupport;
 import com.oxygenxml.image.markup.controller.ScaleListener;
@@ -128,6 +129,10 @@ public class ImageController {
   };
   
   private ImageScaleSupport imageScaleSupport;
+  /**
+   * The loaded image.
+   */
+  private String selectedImageToLoad;
   
   /**
    * Constructor.
@@ -416,11 +421,13 @@ public class ImageController {
     if (currentEditorAccess != null) {
       currentPage = currentEditorAccess.getCurrentPage();
       if (currentPage instanceof WSXMLTextEditorPage) {
-        String selectedText = ((WSTextEditorPage) currentPage).getSelectedText();
-        try {
-          toOpen = new URL(currentEditorAccess.getEditorLocation(), selectedText);
-        } catch (MalformedURLException e1) {
-          e1.printStackTrace();
+        String selectedImageToLoad = ((WSXMLTextEditorPage) currentPage).getSelectedText();
+        if (selectedImageToLoad != null) {
+          try {
+            toOpen = new URL(currentEditorAccess.getEditorLocation(), selectedImageToLoad);
+          } catch (MalformedURLException e1) {
+            e1.printStackTrace();
+          }
         }
       }
     }
@@ -496,6 +503,7 @@ public class ImageController {
       if (currentPage instanceof WSXMLTextEditorPage) {
         try {
           openImage(currentPage, toOpen);
+          selectedImageToLoad = URLUtil.extractFileName(toOpen);
         } catch (MalformedURLException e1) {
           e1.printStackTrace();
         } catch (IOException e1) {
@@ -728,26 +736,38 @@ public class ImageController {
         disableSync(textEditorPage);
         try {
           // Search for the reference area.
-          WSXMLTextNodeRange[] ranges = textEditorPage.findElementsByXPath(createXPath(closestArea));
-          WSXMLTextNodeRange range = ranges[0];
-          
-          int endOffset = textEditorPage.getOffsetOfLineStart(range.getEndLine()) + range.getEndColumn() - 1;
-          
-          Document document = textEditorPage.getDocument();
-          // Inserts the new area.
-          document.insertString(endOffset, buildZoneElement(newArea), null);
-          document.insertString(endOffset, "\n", null);
-          // The previous new line has indented the zone element. We should look for it again.
-          WSXMLTextNodeRange[] newRanges = textEditorPage.findElementsByXPath(createXPath(newArea));
-          final int startSelect = textEditorPage.getOffsetOfLineStart(newRanges[0].getStartLine()) + newRanges[0].getStartColumn() - 1;
-          final int endSelect = textEditorPage.getOffsetOfLineStart(newRanges[0].getEndLine()) + newRanges[0].getEndColumn() - 1;
-          // Select the newly inserted area.
-          SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-              textEditorPage.select(startSelect, endSelect);
-            }
-          });
+          WSXMLTextNodeRange[] ranges = null;
+          if (closestArea != null) {
+            ranges = textEditorPage.findElementsByXPath(createXPath(closestArea));
+          }
+          if (ranges == null ||  ranges.length == 0) { 
+            // Try a different approach.
+            String string = "//*:graphic[@url='" + selectedImageToLoad + "']";
+            ranges = textEditorPage.findElementsByXPath(string);  
+          }
+
+          if (ranges != null && ranges.length > 0) {
+            WSXMLTextNodeRange range = ranges[0];
+            int endOffset = textEditorPage.getOffsetOfLineStart(range.getEndLine()) + range.getEndColumn() - 1;
+
+            Document document = textEditorPage.getDocument();
+            // Inserts the new area.
+            document.insertString(endOffset, buildZoneElement(newArea), null);
+            document.insertString(endOffset, "\n", null);
+            // The previous new line has indented the zone element. We should look for it again.
+            WSXMLTextNodeRange[] newRanges = textEditorPage.findElementsByXPath(createXPath(newArea));
+            final int startSelect = textEditorPage.getOffsetOfLineStart(newRanges[0].getStartLine()) + newRanges[0].getStartColumn() - 1;
+            final int endSelect = textEditorPage.getOffsetOfLineStart(newRanges[0].getEndLine()) + newRanges[0].getEndColumn() - 1;
+            // Select the newly inserted area.
+            SwingUtilities.invokeLater(new Runnable() {
+              @Override
+              public void run() {
+                textEditorPage.select(startSelect, endSelect);
+              }
+            });
+          } else {
+            System.err.println("Unable to get insert location.");
+          }
         } catch (XPathException e) {
           e.printStackTrace();
         } catch (BadLocationException e) {
