@@ -141,6 +141,7 @@ public class ImageController {
    */
   public ImageController(ImageViewerPanel viewerPanel) {
     timer.setRepeats(false);
+    reloadAreasTimer.setRepeats(false);
     this.imageViewerPanel = viewerPanel;
     
     imageScaleSupport = new ImageScaleSupport(viewerPanel.getPlaceholder());
