@@ -256,19 +256,21 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
       } else if (isMatch(new Point(rectangle.x + rectangle.width, rectangle.y + rectangle.height), p)) {
         resizeType = ResizeType.CORNER;
         resizePoint = new Point(rectangle.x + rectangle.width, rectangle.y + rectangle.height);
-      } else if (isMatch(new Point(rectangle.x + rectangle.width / 2, rectangle.y), p)) {
-        resizeType = ResizeType.SIDE;
-        resizePoint = new Point(rectangle.x + rectangle.width / 2, rectangle.y); 
-      } else if (isMatch(new Point(rectangle.x + rectangle.width, rectangle.y + rectangle.height / 2), p)) {
-        resizeType = ResizeType.SIDE;
-        resizePoint = new Point(rectangle.x + rectangle.width, rectangle.y + rectangle.height / 2); 
-      } else if (isMatch(new Point(rectangle.x, rectangle.y + rectangle.height / 2), p)) {
-        resizeType = ResizeType.SIDE;
-        resizePoint = new Point(rectangle.x, rectangle.y + rectangle.height / 2); 
-      } else if (isMatch(new Point(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height), p)) {
-        resizeType = ResizeType.SIDE;
-        resizePoint = new Point(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height); 
-      }
+      } 
+      // TODO The side resizing is not yet supported.
+//      else if (isMatch(new Point(rectangle.x + rectangle.width / 2, rectangle.y), p)) {
+//        resizeType = ResizeType.SIDE;
+//        resizePoint = new Point(rectangle.x + rectangle.width / 2, rectangle.y); 
+//      } else if (isMatch(new Point(rectangle.x + rectangle.width, rectangle.y + rectangle.height / 2), p)) {
+//        resizeType = ResizeType.SIDE;
+//        resizePoint = new Point(rectangle.x + rectangle.width, rectangle.y + rectangle.height / 2); 
+//      } else if (isMatch(new Point(rectangle.x, rectangle.y + rectangle.height / 2), p)) {
+//        resizeType = ResizeType.SIDE;
+//        resizePoint = new Point(rectangle.x, rectangle.y + rectangle.height / 2); 
+//      } else if (isMatch(new Point(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height), p)) {
+//        resizeType = ResizeType.SIDE;
+//        resizePoint = new Point(rectangle.x + rectangle.width / 2, rectangle.y + rectangle.height); 
+//      }
 
       if (resizeType != null) {
         toRet = new ResizeContext(resizeType, resizePoint, rectangle);

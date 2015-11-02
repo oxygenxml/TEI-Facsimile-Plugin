@@ -9,7 +9,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -34,10 +38,10 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import ro.sync.exml.plugin.PluginDescriptor;
 import ro.sync.exml.workspace.api.PluginWorkspace;
 import ro.sync.exml.workspace.api.editor.WSEditor;
 import ro.sync.exml.workspace.api.editor.page.WSEditorPage;
-import ro.sync.exml.workspace.api.editor.page.text.WSTextEditorPage;
 import ro.sync.exml.workspace.api.editor.page.text.xml.WSXMLTextEditorPage;
 import ro.sync.exml.workspace.api.editor.page.text.xml.WSXMLTextNodeRange;
 import ro.sync.exml.workspace.api.editor.page.text.xml.XPathException;
@@ -45,6 +49,7 @@ import ro.sync.exml.workspace.api.listeners.WSEditorChangeListener;
 import ro.sync.exml.workspace.api.listeners.WSEditorListener;
 import ro.sync.exml.workspace.api.standalone.StandalonePluginWorkspace;
 import ro.sync.util.URLUtil;
+import ro.sync.util.editorvars.EditorVariables;
 
 import com.oxygenxml.image.markup.controller.ImageScaleSupport;
 import com.oxygenxml.image.markup.controller.ScaleListener;
@@ -133,6 +138,10 @@ public class ImageController {
    * The loaded image.
    */
   private String selectedImageToLoad;
+  /**
+   * The pattern for generating IDs.
+   */
+  private String idPattern;
   
   /**
    * Constructor.
@@ -251,6 +260,36 @@ public class ImageController {
         showPopup(e);
       }
     });
+  }
+
+  private String getIDPattern() {
+    if (idPattern == null) {
+      // Initialize the ID pattern.
+      String id = "zone.${id}";
+      PluginDescriptor descriptor = ImageMarkupPlugin.getInstance().getDescriptor();
+      File sampleFile = new File(descriptor.getBaseDir(), "etc/id_pattern.txt");
+      if (sampleFile.exists()) {
+        BufferedReader r = null;
+        try {
+          r = new BufferedReader(new InputStreamReader(new FileInputStream(sampleFile), "UTF-8"));
+          id = r.readLine();
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        } finally {
+          if (r != null) {
+            try {
+              r.close();
+            } catch (IOException e1) {
+              e1.printStackTrace();
+            }
+          }
+        }
+      }
+
+      idPattern = id;
+    }
+
+    return idPattern;
   }
 
   /**
@@ -562,6 +601,53 @@ public class ImageController {
         duplicateAction.putValue(Action.NAME, "Duplicate");
         popup.add(duplicateAction);
         
+        AbstractAction copyIdAction = new AbstractAction() {
+          @Override
+          public void actionPerformed(ActionEvent arg0) {
+            WSEditor editorAccess = pluginWorkspaceAccess.getCurrentEditorAccess(PluginWorkspace.MAIN_EDITING_AREA);
+            if (editorAccess != null) {
+              WSEditorPage currentPage = editorAccess.getCurrentPage();
+              String id = null;
+              if (currentPage instanceof WSXMLTextEditorPage) {
+                WSXMLTextEditorPage textEditorPage = (WSXMLTextEditorPage) currentPage;
+                String zoneXpath = createXPath(toProcess);
+                try {
+                  Object[] ids = textEditorPage.evaluateXPath("xs:string(" + zoneXpath + "/@xml:id)");
+                  if (ids != null && ids.length > 0) {
+                    id = ids[0].toString();
+                  } else {
+                    // No ID. Create one, insert it in the document and put it in the clipboard.
+                    WSXMLTextNodeRange[] ranges = textEditorPage.findElementsByXPath(zoneXpath + "/@ulx");
+                    if (ranges != null && ranges.length > 0) {
+                      WSXMLTextNodeRange range  = ranges[0];
+                      
+                      int startOffset = textEditorPage.getOffsetOfLineStart(range.getStartLine()) + range.getStartColumn() - 1;
+                      
+                      id = EditorVariables.expandEditorVariables(getIDPattern(), editorAccess.getEditorLocation().toExternalForm());
+                      Document document = textEditorPage.getDocument();
+                      document.insertString(startOffset, "xml:id=\"" + id + "\" ", null);
+                    }
+                  }
+                } catch (XPathException e) {
+                  e.printStackTrace();
+                } catch (BadLocationException e) {
+                  e.printStackTrace();
+                }
+              }
+              
+              if (id != null) {
+                StringSelection selection = new StringSelection("#" + id);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(selection, selection);
+              }
+            }
+            
+          }
+        };
+        copyIdAction.putValue(Action.NAME, "Copy/Generate ID");
+        copyIdAction.putValue(Action.SHORT_DESCRIPTION, "Copies #ID to clipboard. If an ID doesn't exists it will generate one first. The generation pattern is found inside the plugin directory in id_pattern.txt.");
+        popup.add(copyIdAction);  
+        
         AbstractAction copyAction = new AbstractAction() {
           @Override
           public void actionPerformed(ActionEvent arg0) {
@@ -579,9 +665,9 @@ public class ImageController {
             clipboard.setContents(selection, selection);
           }
         };
-        copyAction.putValue(Action.NAME, "Copy");
+        copyAction.putValue(Action.NAME, "Copy zone");
         popup.add(copyAction);
-
+        
         AbstractAction removeAction = new AbstractAction() {
           @Override
           public void actionPerformed(ActionEvent arg0) {
@@ -649,11 +735,11 @@ public class ImageController {
    */
   private String createXPath(final Rectangle toProcess) {
     String xpath = 
-        "//zone[@ulx='" + toProcess.x
+        "(//zone[@ulx='" + toProcess.x
         + "'][@uly='" + toProcess.y
         + "'][@lrx='" + (toProcess.width + toProcess.x)
         + "'][@lry='" + (toProcess.height + toProcess.y)
-        + "']";
+        + "'])[1]";
     return xpath;
   }
   
@@ -743,8 +829,13 @@ public class ImageController {
           }
           if (ranges == null ||  ranges.length == 0) { 
             // Try a different approach.
-            String string = "//*:graphic[@url='" + selectedImageToLoad + "']";
-            ranges = textEditorPage.findElementsByXPath(string);  
+            String string = "(//*:graphic[@url='" + selectedImageToLoad + "'])[1]";
+            ranges = textEditorPage.findElementsByXPath(string);
+            
+            if (ranges == null ||  ranges.length == 0) {
+              // Insert after any graphic element.
+              ranges = textEditorPage.findElementsByXPath("(//*:graphic)[1]");
+            }
           }
 
           if (ranges != null && ranges.length > 0) {
