@@ -29,8 +29,13 @@ public class ImageScaleSupport {
    * Listeners interest in scale change.
    */
   private List<ScaleListener> listeners = new ArrayList<ScaleListener>(1);
+  /**
+   * The panel on which to install the zoom.
+   */
+  private JComponent panel;
   
   public ImageScaleSupport(final JComponent panel) {
+    this.panel = panel;
     panel.addMouseWheelListener(new MouseWheelListener() {
       @Override
       public void mouseWheelMoved(MouseWheelEvent e) {
@@ -171,5 +176,25 @@ public class ImageScaleSupport {
     for (ScaleListener scaleListener : listeners) {
       scaleListener.scaleEvent(oldScale, newScale);
     }
+  }
+  
+  public void zoomIn() {
+    double oldScale = scale;
+    scale = scale * 2;    
+    fireScaleListener(oldScale, scale);
+    
+    panel.invalidate();
+    panel.doLayout();
+    panel.doLayout();
+  }
+  
+  public void zoomOut() {
+    double oldScale = scale;
+    scale = scale / 2;
+    fireScaleListener(oldScale, scale);
+
+    panel.invalidate();
+    panel.doLayout();
+    panel.doLayout();
   }
 }

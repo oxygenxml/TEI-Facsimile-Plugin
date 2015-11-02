@@ -11,6 +11,7 @@ import java.net.URL;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -63,7 +64,8 @@ public class ImageMarkupPluginExtension implements WorkspaceAccessPluginExtensio
 
           JPanel northPanel = new JPanel(new GridBagLayout());
 
-          JButton jButton = new JButton("Open selected");
+          JButton jButton = new JButton("Open");
+          jButton.setToolTipText("You can select an image URL in the editor and automatically open it or you can browse for one.");
           jButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -71,6 +73,26 @@ public class ImageMarkupPluginExtension implements WorkspaceAccessPluginExtensio
             }
           });
           northPanel.add(jButton);
+          
+          JButton zoomIn = new JButton(
+              new ImageIcon(getClass().getResource("/images/ZoomIn16.gif")));
+          zoomIn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+              ctrl.zoomIn();
+            }
+          });
+          northPanel.add(zoomIn);
+          
+          JButton zoomOut = new JButton(
+              new ImageIcon(getClass().getResource("/images/ZoomOut16.gif")));
+          zoomOut.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+              ctrl.zoomOut();
+            }
+          });
+          northPanel.add(zoomOut);
 
           jPanel.add(northPanel, BorderLayout.NORTH);
           jPanel.add(imageViewerPanel.getPlaceholder(), BorderLayout.CENTER);

@@ -800,4 +800,12 @@ public class ImageController {
     inhibit = true;
     ((JTextComponent) textEditorPage.getTextComponent()).removeCaretListener(caretListener);
   }
+  
+  public void zoomIn() {
+    imageScaleSupport.zoomIn();
+  }
+  
+  public void zoomOut() {
+    imageScaleSupport.zoomOut();
+  }
 }
