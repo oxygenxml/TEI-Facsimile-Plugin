@@ -15,6 +15,7 @@ import javax.swing.JComponent;
 
 import com.oxygenxml.image.markup.AreaUpdatedListener;
 import com.oxygenxml.image.markup.ImageViewerPanel;
+import com.oxygenxml.image.markup.controller.ImageScaleSupport;
 import com.oxygenxml.image.markup.decorator.ResizeContext.ResizeType;
 
 /**
@@ -35,7 +36,7 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
   /**
    * All the rectangles.
    */
-  private List<Rectangle> areas = new ArrayList<Rectangle>();
+  private List<Rectangle> originalAreas = new ArrayList<Rectangle>();
   /**
    * Currently active area. Either because the user invoked the contextual menu onto it
    * or because it was explicitly selected.
@@ -45,6 +46,8 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
    * The context of the current resize operation.
    */
   private ResizeContext resizeContext;
+  
+  private ImageScaleSupport imageScaleSupport;
   /**
    * Listeners interested in area updates.
    */
@@ -60,6 +63,7 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
   public static RectangleImageDecorator install(ImageViewerPanel component) {
     RectangleImageDecorator dec = new RectangleImageDecorator();
     dec.component = component;
+    dec.imageScaleSupport = component.getImageScaleSupport();
     component.addMouseListener(dec);
     component.addMouseMotionListener(dec);
 
@@ -75,8 +79,9 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
    */
   public void paint(Graphics g) {
     Rectangle clipBounds = g.getClipBounds();
-    for (Rectangle rectangle : areas) {
-      if (clipBounds.intersects(rectangle)) {
+    for (Rectangle rectangle : originalAreas) {
+      rectangle = scale(rectangle);
+      if (clipBounds.intersects(rectangle.x, rectangle.y, rectangle.width + 1, rectangle.height + 1)) {
         g.setColor(Color.BLACK);
         if (activeArea != null && rectangle.equals(activeArea)) {
           g.setColor(Color.RED);	
@@ -88,7 +93,7 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
 
     if (resizeContext != null) {
       g.setColor(Color.RED);
-      Rectangle hintArea = getHintArea(resizeContext.getResizePoint());
+      Rectangle hintArea = getHintArea(scale(resizeContext.getResizePoint()));
       g.drawRect(hintArea.x, hintArea.y, hintArea.width, hintArea.height);
     }
   }
@@ -102,18 +107,24 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
       
       // Temporary rectangle. Clear.
       Rectangle toClear = oldContext.getRectangle();
-      areas.remove(toClear);
+      int indexOf = originalAreas.indexOf(toClear);
+      if (indexOf != -1) {
+        originalAreas.remove(indexOf);
+      }
+      
+      toClear = scale(toClear);
       component.repaint(toClear.x, toClear.y, toClear.width + 1, toClear.height + 1);
-      Rectangle hintArea = getHintArea(oldContext.getResizePoint());
+      Rectangle hintArea = getHintArea(scale(oldContext.getResizePoint()));
       component.repaint(hintArea.x, hintArea.y, hintArea.width + 1, hintArea.height + 1);
     }
 
     if (resizeContext != null) {
       Rectangle newRect = resizeContext.getRectangle();
-      areas.add(newRect);
+      originalAreas.add(newRect);
 
+      newRect = scale(newRect);
       component.repaint(newRect.x, newRect.y, newRect.width + 1, newRect.height + 1);
-      Rectangle hintArea = getHintArea(resizeContext.getResizePoint());
+      Rectangle hintArea = getHintArea(scale(resizeContext.getResizePoint()));
       component.repaint(hintArea.x, hintArea.y, hintArea.width + 1, hintArea.height + 1);
     }
   }
@@ -129,18 +140,17 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
   @Override
   public void mousePressed(MouseEvent e) {
     if (!e.isPopupTrigger()) {
-      Point p = e.getPoint();
       activeArea = null;
 
       // Check if we are pressing on an existing
-      Point resizePoint = e.getPoint();
-      ResizeContext candidateArea = getHoverArea(e.getPoint());
+      Point resizePoint = original(e.getPoint());
+      ResizeContext candidateArea = getHoverArea(resizePoint);
       if (candidateArea != null) {
         resizeContext = candidateArea;
         resizePoint = candidateArea.getResizePoint();
       } else {
-        resizePoint = new Point(p.x + 1, p.y + 1);
-        resizeContext = new ResizeContext(ResizeType.CORNER, resizePoint, new Rectangle(p.x, p.y, 0, 0));
+        resizePoint = new Point(resizePoint.x + 1, resizePoint.y + 1);
+        resizeContext = new ResizeContext(ResizeType.CORNER, resizePoint, new Rectangle(resizePoint.x, resizePoint.y, 0, 0));
       }
 
       updateRectangleArea(resizePoint);
@@ -163,10 +173,15 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
     if (oldContext != null) {
       if (oldContext.getRectangle().width <= 1) {
         Rectangle toClear = oldContext.getRectangle();
-        areas.remove(toClear);
+        int indexOf = originalAreas.indexOf(toClear);
+        if (indexOf != -1) {
+          originalAreas.remove(indexOf);
+        }
+        
+        toClear = scale(toClear);
         component.repaint(toClear.x, toClear.y, toClear.width + 1, toClear.height + 1);
       }
-      Rectangle hintArea = getHintArea(oldContext.getResizePoint());
+      Rectangle hintArea = getHintArea(scale(oldContext.getResizePoint()));
       component.repaint(hintArea.x, hintArea.y, hintArea.width + 1, hintArea.height + 1);
     }
   }
@@ -174,43 +189,42 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
 
   @Override
   public void mouseDragged(MouseEvent e) {
-    updateRectangleArea(e.getPoint());
+    updateRectangleArea(original(e.getPoint()));
   }
 
   @Override
   public void mouseMoved(MouseEvent e) {
     ResizeContext oldContext = resizeContext;
 
-    resizeContext = getHoverArea(e.getPoint());
+    resizeContext = getHoverArea(original(e.getPoint()));
 
     if (oldContext != null) {
-      Rectangle hintArea = getHintArea(oldContext.getResizePoint());
+      Rectangle hintArea = getHintArea(scale(oldContext.getResizePoint()));
       component.repaint(hintArea.x, hintArea.y, hintArea.width + 1, hintArea.height + 1);
     }
 
     if (resizeContext != null) {
-      Rectangle hintArea = getHintArea(resizeContext.getResizePoint());
+      Rectangle hintArea = getHintArea(scale(resizeContext.getResizePoint()));
       component.repaint(hintArea.x, hintArea.y, hintArea.width + 1, hintArea.height + 1);
     }
   }
 
 
   public void clean() {
-    areas.clear();
-
+    originalAreas.clear();
     resizeContext = null;
-
     activeArea = null;
   }
 
+  
 
   public void setAreas(List<Rectangle> areas2) {
-    areas.clear();
-    areas.addAll(areas2);
+    originalAreas.clear();
+    originalAreas.addAll(areas2);
   }
 
   public List<Rectangle> getAreas() {
-    return areas;
+    return originalAreas;
   }
 
   public void setActive(Rectangle buildRectangle) {
@@ -219,7 +233,7 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
       component.repaint(oldActiveArea.x, oldActiveArea.y, oldActiveArea.width + 1, oldActiveArea.height + 1);
     }
 
-    activeArea = buildRectangle;
+    activeArea = buildRectangle != null ? scale(buildRectangle) : null;
     if (activeArea != null) {
       component.repaint(activeArea.x, activeArea.y, activeArea.width + 1, activeArea.height + 1);
     }
@@ -227,10 +241,53 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
   }
 
   public void removeArea(Rectangle toProcess) {
-    areas.remove(toProcess);
+    int indexOf = originalAreas.indexOf(toProcess);
+    if (indexOf != -1) {
+      originalAreas.remove(indexOf);
 
-    component.repaint(toProcess.x, toProcess.y, toProcess.width + 1, toProcess.height + 1);
+      Rectangle scaled = scale(toProcess);
+      component.repaint(scaled.x, scaled.y, scaled.width + 1, scaled.height + 1);
+    }
   }
+  
+  
+  private Rectangle scale(Rectangle area) {
+    // Scale the area
+    int x = imageScaleSupport.applyScale(area.x);
+    int y = imageScaleSupport.applyScale(area.y);
+    int lx = imageScaleSupport.applyScale(area.x + area.width);
+    int ly = imageScaleSupport.applyScale(area.y + area.height);
+    
+    return new Rectangle(x, y, lx - x, ly -y);
+  }
+  
+  private Point scale(Point area) {
+    // Scale the area
+    int x = imageScaleSupport.applyScale(area.x);
+    int y = imageScaleSupport.applyScale(area.y);
+    
+    return new Point(x, y);
+  }
+  
+  private Rectangle original(Rectangle area) {
+    // Scale the area
+    int x = imageScaleSupport .getOriginal(area.x);
+    int y = imageScaleSupport.getOriginal(area.y);
+    int lx = imageScaleSupport.getOriginal(area.x + area.width);
+    int ly = imageScaleSupport.getOriginal(area.y + area.height);
+    
+    return new Rectangle(x, y, lx - x, ly -y);
+  }
+  
+  private Point original(Point area) {
+    // Scale the area
+    int x = imageScaleSupport.getOriginal(area.x);
+    int y = imageScaleSupport.getOriginal(area.y);
+    
+    return new Point(x, y);
+  }
+  
+  
 
   /**
    * Checks if the given point is over a resize area of one of the existing rectangles and returns that rectangle.
@@ -243,7 +300,7 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
     ResizeContext toRet = null;
     ResizeType resizeType = null;
     Point resizePoint = null;
-    for (Rectangle rectangle : areas) {
+    for (Rectangle rectangle : originalAreas) {
       if (isMatch(new Point(rectangle.x, rectangle.y), p)) {
         resizeType = ResizeType.CORNER;
         resizePoint = new Point(rectangle.x, rectangle.y); 
@@ -282,11 +339,14 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
   }
 
   private boolean isMatch(Point referencePoint, Point point) {
-    return Math.abs(referencePoint.x - point.x) < DELTA && Math.abs(referencePoint.y - point.y) < DELTA;
+    int original = imageScaleSupport.getOriginal(DELTA);
+    
+    return Math.abs(referencePoint.x - point.x) < original && Math.abs(referencePoint.y - point.y) < original;
   }
 
   private Rectangle getHintArea(Point dragPoint) {
-    return new Rectangle(dragPoint.x - 5, dragPoint.y - 5, 10, 10);
+    int original = 5;
+    return new Rectangle(dragPoint.x - original, dragPoint.y - original, original * 2, original * 2);
   }
 
   /**
@@ -320,7 +380,7 @@ public class RectangleImageDecorator implements ImageDecorator, MouseListener, M
     Rectangle candidate = null;
     int delta = Integer.MAX_VALUE;
     // Search for an already existing rectangle, closest to the new one.
-    for (Rectangle rectangle : areas) {
+    for (Rectangle rectangle : originalAreas) {
       if (!rectangle.contains(newArea)) {
         int cDelta = newArea.y - rectangle.y;
         if (candidate == null || cDelta > 0 && cDelta < delta) {

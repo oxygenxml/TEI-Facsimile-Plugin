@@ -423,10 +423,10 @@ public class ImageController {
   private Rectangle buildRectangle(String zone) {
     String[] splits = zone.split(",");
 
-    int x = imageScaleSupport.applyScale(Integer.parseInt(splits[0]));
-    int y = imageScaleSupport.applyScale(Integer.parseInt(splits[1]));
-    int lx = imageScaleSupport.applyScale(Integer.parseInt(splits[2]));
-    int ly = imageScaleSupport.applyScale(Integer.parseInt(splits[3]));
+    int x = Integer.parseInt(splits[0]);
+    int y = Integer.parseInt(splits[1]);
+    int lx = Integer.parseInt(splits[2]);
+    int ly = Integer.parseInt(splits[3]);
     Rectangle rectangle = new Rectangle(
         x,
         y,
@@ -477,11 +477,12 @@ public class ImageController {
     }
     
     if (toOpen != null) {
+      String oldImage = selectedImageToLoad;
       try {
+        selectedImageToLoad = URLUtil.extractFileName(toOpen);
         openImage(currentPage, toOpen);
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (XPathException e) {
+      } catch (Exception e) {
+        selectedImageToLoad = oldImage;
         e.printStackTrace();
       }
     }
@@ -499,6 +500,7 @@ public class ImageController {
       throws IOException, XPathException {
     imageViewerPanel.showImage(toOpen);
 
+    
     reloadAreas(currentPage);
   }
 
@@ -519,11 +521,26 @@ public class ImageController {
     }
     
     if (currentPage instanceof WSXMLTextEditorPage) {
-      Object[] evaluateXPath = ((WSXMLTextEditorPage) currentPage).evaluateXPath("for $zone in //zone return string-join(($zone/@ulx, $zone/@uly, $zone/@lrx, $zone/@lry), ',')");
+      String xpath = "for $zone in " +
+      // Restricts to the zones from the loaded surface.
+      createContextSurfaceXPath() +
+      "//zone return string-join(($zone/@ulx, $zone/@uly, $zone/@lrx, $zone/@lry), ',')";
+      
+      Object[] evaluateXPath = ((WSXMLTextEditorPage) currentPage).evaluateXPath(
+          xpath);
       if (evaluateXPath != null && evaluateXPath.length > 0) {
         init(evaluateXPath);
       }
     }
+  }
+
+  /**
+   * Creates an Xpath expression that identifies the surface which the image was loaded from.
+   * 
+   * @return A context XPath.
+   */
+  private String createContextSurfaceXPath() {
+    return selectedImageToLoad != null ? ("(//surface[graphic[ends-with(@url, '" + selectedImageToLoad + "') or ends-with(@target, '" + selectedImageToLoad + "')]])[1]") : "";
   }
   
   /**
@@ -541,14 +558,12 @@ public class ImageController {
     if (currentEditorAccess != null) {
       WSEditorPage currentPage = currentEditorAccess.getCurrentPage();
       if (currentPage instanceof WSXMLTextEditorPage) {
+        String oldImage = selectedImageToLoad;
         try {
-          openImage(currentPage, toOpen);
           selectedImageToLoad = URLUtil.extractFileName(toOpen);
-        } catch (MalformedURLException e1) {
-          e1.printStackTrace();
-        } catch (IOException e1) {
-          e1.printStackTrace();
-        } catch (XPathException e1) {
+          openImage(currentPage, toOpen);
+        } catch (Exception e1) {
+          selectedImageToLoad = oldImage;
           e1.printStackTrace();
         }
       }
@@ -556,7 +571,7 @@ public class ImageController {
   }
 
   private void showPopup(MouseEvent ev) {
-    Point point = ev.getPoint();
+    Point point = imageScaleSupport.getOriginal(ev.getPoint());
     if (ev.isPopupTrigger()) {
       Rectangle candidate = null;
       for (Rectangle rectangle : decorator.getAreas()) {
@@ -721,7 +736,7 @@ public class ImageController {
           }
         });
 
-        popup.show(imageViewerPanel, point.x, point.y);
+        popup.show(imageViewerPanel, ev.getPoint().x, ev.getPoint().y);
       }
     }
   }
@@ -735,7 +750,7 @@ public class ImageController {
    */
   private String createXPath(final Rectangle toProcess) {
     String xpath = 
-        "(//zone[@ulx='" + toProcess.x
+        "(" + createContextSurfaceXPath() + "//zone[@ulx='" + toProcess.x
         + "'][@uly='" + toProcess.y
         + "'][@lrx='" + (toProcess.width + toProcess.x)
         + "'][@lry='" + (toProcess.height + toProcess.y)
@@ -767,10 +782,10 @@ public class ImageController {
    * @param b Builder to write them into.
    */
   private void buildZoneAttrs(final Rectangle toProcess, StringBuilder b) {
-    int x = imageScaleSupport.getOriginal(toProcess.x);
-    int y = imageScaleSupport.getOriginal(toProcess.y);
-    int lrx = imageScaleSupport.getOriginal(toProcess.x + toProcess.width);
-    int lry = imageScaleSupport.getOriginal(toProcess.y + toProcess.height);
+    int x = toProcess.x;
+    int y = toProcess.y;
+    int lrx = toProcess.x + toProcess.width;
+    int lry = toProcess.y + toProcess.height;
     
     b.append(" ulx=\"").append(x).append("\"");
     b.append(" uly=\"").append(y).append("\"");
@@ -788,10 +803,10 @@ public class ImageController {
    */
   private String getReplacement(final Rectangle newArea, String text) {
     StringBuilder b = new StringBuilder();
-    int x = imageScaleSupport.getOriginal(newArea.x);
-    int y = imageScaleSupport.getOriginal(newArea.y);
-    int lrx = imageScaleSupport.getOriginal(newArea.x + newArea.width);
-    int lry = imageScaleSupport.getOriginal(newArea.y + newArea.height);
+    int x = newArea.x;
+    int y = newArea.y;
+    int lrx = newArea.x + newArea.width;
+    int lry = newArea.y + newArea.height;
     
     if (text.startsWith("ulx")) {
       b.append("ulx=\"").append(x).append("\"");
@@ -829,7 +844,7 @@ public class ImageController {
           }
           if (ranges == null ||  ranges.length == 0) { 
             // Try a different approach.
-            String string = "(//*:graphic[@url='" + selectedImageToLoad + "'])[1]";
+            String string = "(//*:graphic[ends-with(@url, '" + selectedImageToLoad + "') or ends-with(@target, '" + selectedImageToLoad + "')])[1]";
             ranges = textEditorPage.findElementsByXPath(string);
             
             if (ranges == null ||  ranges.length == 0) {

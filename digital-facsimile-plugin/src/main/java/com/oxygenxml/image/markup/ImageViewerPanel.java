@@ -173,4 +173,8 @@ public class ImageViewerPanel extends JPanel implements Scrollable {
   public void setImageScaleSupport(ImageScaleSupport imageScaleSupport) {
     this.imageScaleSupport = imageScaleSupport;
   }
+  
+  public ImageScaleSupport getImageScaleSupport() {
+    return imageScaleSupport;
+  }
 }
