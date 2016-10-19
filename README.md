@@ -15,7 +15,7 @@ How to install it
 
 2. The plugin is also packed as an add-on so you can install it using the Oxygen add-ons support. Depending on the Oxygen version you are using, the procedure might differ but the update site where this add-on is published is this: 
 
-addon/image-markup-plugin.xml
+https://github.com/oxygenxml/TEI-Facsimile-Plugin/raw/master/addon/image-markup-plugin.xml
 
 
 How to quickly test it
