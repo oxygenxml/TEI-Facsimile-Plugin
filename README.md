@@ -22,7 +22,7 @@ How to quickly test it
 --------------------
 After installing it, you should see an *Image Markup Sample* button  on the toolbar. Click it to launch a sample file and to initialize the *Image-Markup* view with an image.
 
-1. Adding zones/rectangles
+Adding zones/rectangles
 - If you place yourself in a *zone* element, that rectangle will be painted with a different color in the view
 - If you right click on a rectangle in image view, you can either delete it (and will reflect in the editor) or copy it
 - You can use the mouse to draw a new rectangle over the image. Then right click and copy its coordinates to paste them in the editor.
@@ -30,15 +30,15 @@ After installing it, you should see an *Image Markup Sample* button  on the tool
 - a rectangle/zone can be resized. It means that you can grab an existing rectangle by one of its corners and resize it.
 - you can duplicate an existing rectangle (there is a Duplicate action in the contextual menu presented over a rectangle, in the view)
 
-2. A seamless integration between the document and the view
+A seamless integration between the document and the view
 - for every new rectangle drawn in the view, a new <zone> element will be automatically inserted in the document.
 - for every rectangle resized in the view, the corresponding <zone> element will be automatically updated in the document.
 - every change in the document will determine the view to automatically reload all the zones
 
-3. Linking a zone with existing transcribed text elements
+Linking a zone with existing transcribed text elements
 There is a Copy/Generate ID action in the contextual menu presented for an area (in the image view). What this action does is:
-1. if the zone doesn't have an ID it will generate one. The pattern is read from the configuration file etc/id_pattern.txt and it accepts Oxygen editor variables.
-2. copy #id to clipboard
+- if the zone doesn't have an ID it will generate one. The pattern is read from the configuration file etc/id_pattern.txt and it accepts Oxygen editor variables.
+- copy #id to clipboard
 The idea is that after invoking this action you will go on an element and just paste the value inside an @facs.
 
 
