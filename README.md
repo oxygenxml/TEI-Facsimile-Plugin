@@ -51,3 +51,14 @@ How to use it
 	&lt;graphic url="Bovelles-49r.png"/&gt;
 	
 you should select *Bovelles-49r.png* and press *Open Selected* in the view.
+
+How to add functionality
+--------------------
+I will focus on using Eclipse IDE as the delepment environment:
+1. Clone the repository inside an Eclipse workspace
+2. Inside Eclipse's _Package Explorer_ invoke the contextual menu and choose: _Import_. Select _Existing Maven Projects_ and browse for the _TEI-Facsimile-Plugin_ directory
+3. After the project is created,it's time to import the _image-markup-plugin_ submodule as an Eclipse project. This will make it easier to work with it. Inside Eclipse's _Package Explorer_, expand the _TEI-Facsimile-Plugin_ project and identify the _image-markup-plugin_ submodule. Invoke the contextual menu and select _Import_ again, then _Existing Maven Projects_. Click _Next_ and then _Finish_ to import the submodule.
+
+From now on you can work exclusively in the _image-markup-plugin_ project. After making changes in the Java code, to build the project:
+1. Invoke the condextual menu on the  _image-markup-plugin_ and choose _Run as->Maven install_
+Builds are put inside _TEI-Facsimile-Plugin-New\builds_ and _TEI-Facsimile-Plugin-New\addon_
