@@ -11,7 +11,17 @@
 	
 	<artifactId>image-markup-plugin</artifactId>
 	<name>image-markup-plugin</name>
-	
+  
+    <developers>
+      <developer>
+        <name>Alex Jitianu</name>
+        <email>alex_jitianu@sync.ro</email>
+        <roles>
+          <role>manager</role>
+        </roles>
+      </developer>
+    </developers>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
