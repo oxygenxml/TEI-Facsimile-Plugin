@@ -5,7 +5,7 @@
     <xt:version>${project.parent.version}.0</xt:version>
     <xt:oxy_version>${project.parent.version}</xt:oxy_version>
     <xt:type>plugin</xt:type>
-    <xt:author>Oxygen XML Editor</xt:author>
+    <xt:author>Syncro Soft</xt:author>
     <xt:name>Image Decorator</xt:name>
     <xt:description><html xmlns="http://www.w3.org/1999/xhtml">
     <head>
