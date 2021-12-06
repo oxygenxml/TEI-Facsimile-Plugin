@@ -7,7 +7,7 @@
  name="Image-Markup-Plugin"
  description="Digital Facsimile Annotation plugin"
  version="${project.version}"
- vendor="SyncRO"
+ vendor="Syncro Soft"
  class="com.oxygenxml.image.markup.ImageMarkupPlugin"
  classLoaderType="preferReferencedResources">
   <runtime>
