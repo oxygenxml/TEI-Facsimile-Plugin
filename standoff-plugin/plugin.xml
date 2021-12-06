@@ -7,7 +7,7 @@
  name="StandoffPlugin"
  description="Standoff annotation"
  version="${project.version}"
- vendor="SyncRO"
+ vendor="Syncro Soft"
  class="com.oxygenxml.tei.standoff.StandoffPlugin"
  classLoaderType="preferReferencedResources">
   <runtime>
