@@ -27,12 +27,12 @@
 			<id>public</id>
 			<name>oXygen public artifacts</name>
 			<url>https://www.oxygenxml.com/maven</url>
-			<!--<releases>
+			<releases>
 				<enabled>true</enabled>
 			</releases>
 			<snapshots>
 				<enabled>true</enabled>
-			</snapshots>-->
+			</snapshots>
 		</repository>
 	</repositories>
 	
