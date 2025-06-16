@@ -22,6 +22,20 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	
+	<repositories>
+		<repository>
+			<id>public</id>
+			<name>oXygen public artifacts</name>
+			<url>https://www.oxygenxml.com/maven</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	
 	<dependencies>
 		
 		<dependency>
